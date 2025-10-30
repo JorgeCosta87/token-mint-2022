@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { UiWalletAccount } from '@wallet-ui/react'
+import { useMintTokenMutation } from '../data-access/use-mint-token-mutation'
+import { type Address } from 'gill'
 import { useCreateMintMutation } from '../data-access/use-create-mint-mutation'
 
 export function TokenMinterUiForm({ account }: { account: UiWalletAccount }) {
@@ -17,6 +19,10 @@ export function TokenMinterUiForm({ account }: { account: UiWalletAccount }) {
   const [metaError, setMetaError] = useState<string>('')
 
   const createMint = useCreateMintMutation({ account })
+  const mintToken = useMintTokenMutation({ account })
+  const [mintAddress, setMintAddress] = useState('')
+  const [recipient, setRecipient] = useState('')
+  const [amount, setAmount] = useState(1)
 
   useEffect(() => {
     let cancelled = false
@@ -45,7 +51,8 @@ export function TokenMinterUiForm({ account }: { account: UiWalletAccount }) {
   }, [uri])
 
   return (
-    <Card>
+    <div className="space-y-6">
+      <Card>
       <CardHeader>
         <CardTitle>Token Minter</CardTitle>
         <CardDescription>Create a new mint with metadata preview.</CardDescription>
@@ -97,8 +104,48 @@ export function TokenMinterUiForm({ account }: { account: UiWalletAccount }) {
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+      <Card>
+      <CardHeader>
+        <CardTitle>Mint Tokens</CardTitle>
+        <CardDescription>Mint tokens to a recipient (creates ATA if missing).</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="mint-address">Mint Address</Label>
+              <Input id="mint-address" value={mintAddress} onChange={(e) => setMintAddress(e.target.value)} placeholder="Mint public key" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="recipient-address">Recipient Address</Label>
+              <Input id="recipient-address" value={recipient} onChange={(e) => setRecipient(e.target.value)} placeholder="Recipient public key" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="mint-amount">Amount</Label>
+              <Input id="mint-amount" type="number" min={0} value={amount} onChange={(e) => setAmount(parseInt(e.target.value || '0'))} />
+            </div>
+            <div>
+              <Button
+                variant="outline"
+                disabled={mintToken.isPending || !mintAddress || !recipient || Number.isNaN(amount) || amount <= 0}
+                onClick={() =>
+                  mintToken.mutateAsync({
+                    mintAddress: mintAddress as unknown as Address,
+                    recipient: recipient as unknown as Address,
+                    amount,
+                  })
+                }
+              >
+                {mintToken.isPending ? 'Minting…' : 'Mint'}
+              </Button>
+            </div>
+          </div>
+        </div>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
 
