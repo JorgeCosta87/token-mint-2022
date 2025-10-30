@@ -13,13 +13,17 @@ import {
   type Address,
   type ReadonlyUint8Array,
 } from 'gill';
-import { type ParsedCreateMintInstruction } from '../instructions';
+import {
+  type ParsedCreateMintInstruction,
+  type ParsedMintTokenInstruction,
+} from '../instructions';
 
 export const TOKEN_MINT_PROGRAM_ADDRESS =
   '9SwkHfBurrRq7Vw5zQ1QErAatwgdqQdaENDt6saCu8SN' as Address<'9SwkHfBurrRq7Vw5zQ1QErAatwgdqQdaENDt6saCu8SN'>;
 
 export enum TokenMintInstruction {
   CreateMint,
+  MintToken,
 }
 
 export function identifyTokenMintInstruction(
@@ -37,6 +41,17 @@ export function identifyTokenMintInstruction(
   ) {
     return TokenMintInstruction.CreateMint;
   }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([172, 137, 183, 14, 207, 110, 234, 56])
+      ),
+      0
+    )
+  ) {
+    return TokenMintInstruction.MintToken;
+  }
   throw new Error(
     'The provided instruction could not be identified as a tokenMint instruction.'
   );
@@ -44,6 +59,10 @@ export function identifyTokenMintInstruction(
 
 export type ParsedTokenMintInstruction<
   TProgram extends string = '9SwkHfBurrRq7Vw5zQ1QErAatwgdqQdaENDt6saCu8SN',
-> = {
-  instructionType: TokenMintInstruction.CreateMint;
-} & ParsedCreateMintInstruction<TProgram>;
+> =
+  | ({
+      instructionType: TokenMintInstruction.CreateMint;
+    } & ParsedCreateMintInstruction<TProgram>)
+  | ({
+      instructionType: TokenMintInstruction.MintToken;
+    } & ParsedMintTokenInstruction<TProgram>);

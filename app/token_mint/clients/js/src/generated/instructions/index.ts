@@ -7,3 +7,4 @@
  */
 
 export * from './createMint';
+export * from './mintToken';

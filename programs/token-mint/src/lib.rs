@@ -17,6 +17,10 @@ pub mod token_mint {
     ) -> anchor_lang::Result<()> {
         ctx.accounts.create_mint(args)
     }
+
+    pub fn mint_token(ctx: Context<MintToken>, amount: u64) -> anchor_lang::Result<()> {
+        ctx.accounts.mint_token(amount)
+    }
 }
 
 // Sources
